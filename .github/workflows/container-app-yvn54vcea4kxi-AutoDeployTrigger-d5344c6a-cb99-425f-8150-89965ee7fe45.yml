@@ -1,0 +1,47 @@
+name: Trigger auto deployment for container-app-yvn54vcea4kxi
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ master ]
+    paths:
+    - '/my-portfolio/**'
+    - '.github/workflows/container-app-yvn54vcea4kxi-AutoDeployTrigger-d5344c6a-cb99-425f-8150-89965ee7fe45.yml'
+
+  # Allow manual trigger 
+  workflow_dispatch:      
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions: 
+      id-token: write #This is required for requesting the OIDC JWT Token
+      contents: read #Required when GH token is used to authenticate with private repo
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.CONTAINERAPPYVN54VCEA4KXI_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.CONTAINERAPPYVN54VCEA4KXI_AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.CONTAINERAPPYVN54VCEA4KXI_AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          appSourcePath: ${{ github.workspace }}/my-portfolio 
+          registryUrl: containerregistryyvn54vcea4kxi.azurecr.io
+          registryUsername: ${{ secrets.CONTAINERAPPYVN54VCEA4KXI_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.CONTAINERAPPYVN54VCEA4KXI_REGISTRY_PASSWORD }}
+          containerAppName: container-app-yvn54vcea4kxi
+          resourceGroup: learnclouddemo2942b
+          imageToBuild: containerregistryyvn54vcea4kxi.azurecr.io/container-app-yvn54vcea4kxi:${{ github.sha }}
+          _buildArgumentsKey_: |
+            _buildArgumentsValues_
+
+
